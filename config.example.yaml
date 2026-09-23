@@ -1,0 +1,151 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# dev-agent configuration. Copy to ~/.devagent/config.yaml (install.sh does it)
+# Secrets are NOT stored here: they live in the macOS Keychain
+# (run `devagent secrets set <name>`), or in env vars as a fallback.
+# ─────────────────────────────────────────────────────────────────────────────
+
+me:
+  name: "Suni"
+  timezone: "Asia/Kolkata"
+  # Your display name in Teams, used to spot @mentions and skip your own messages
+  teams_display_name: "Suni"
+
+people:                       # context for triage + meeting minutes
+  - { name: "Sandip",  role: "CEO — runs the 8 AM priorities call", priority: high }
+  - { name: "Sangita", role: "Manager — runs the 1 PM standup",      priority: high }
+
+# ── Claude engine & model routing ───────────────────────────────────────────
+engine:
+  kind: claude                 # claude (Agent SDK). "cursor" reserved for later.
+  # Auth: either run `claude login` once (uses your Claude subscription), or
+  # store an API key: `devagent secrets set anthropic_api_key`
+  models:
+    triage:    "claude-haiku-4-5"    # Teams message classification (cheap, fast)
+    planner:   "claude-sonnet-5"     # minutes, day plan, standup diff, task analysis
+    implement: "claude-sonnet-5"     # small/medium tasks
+    implement_complex: "claude-opus-5-5"   # large or multi-repo tasks
+    review:    "claude-opus-5-5"     # the two independent review passes
+  effort:
+    implement: medium
+    implement_complex: high
+    review: medium
+  max_budget_usd_per_task: 15      # hard stop for a single task run
+  max_turns_per_run: 150
+  parallel_tasks: 1                # how many tasks may be implemented at once
+
+# ── Repositories the agent may change ───────────────────────────────────────
+workspace:
+  # where your normal clones live (the agent never edits these directly —
+  # it only fetches/pulls main there and creates worktrees next to it)
+  repos_root: "~/Projects/work"
+  # where per-task worktrees + artifacts go
+  work_dir: "~/.devagent/work"
+  branch_prefix: "feature/"
+  base_branch: "main"
+  # pull origin main into your own clone too, but only when it is on main and clean
+  pull_main_in_clone: true
+
+repos:
+  # name = folder name under repos_root
+  - name: viam
+    provider: bitbucket
+    remote: "qualibar/viam"            # workspace/repo_slug
+    stack: "Laravel API"
+    setup: ["composer install --no-interaction --prefer-dist"]
+    copy_files: [".env.testing"]       # copied from your clone into each worktree
+    test: "php artisan test"
+  - name: vcommons
+    provider: bitbucket
+    remote: "qualibar/vcommons"
+    stack: "Shared PHP package"
+    setup: ["composer install --no-interaction --prefer-dist"]
+    test: "vendor/bin/phpunit"
+  - name: vmigration
+    provider: bitbucket
+    remote: "qualibar/vmigration"
+    stack: "Laravel migrations"
+    setup: ["composer install --no-interaction --prefer-dist"]
+    copy_files: [".env.testing"]
+    test: "php artisan test"
+  - name: vmanagement
+    provider: bitbucket
+    remote: "qualibar/vmanagement"
+    stack: "React frontend"
+    setup: ["npm ci"]
+    test: "npm test -- --watchAll=false"
+    ui: true                           # Playwright screenshots expected
+    dev_url: "http://localhost:3000"
+  # NOTE: this tool's own code lives on GitHub (ersunnyroy/dev-aiagent) and is managed by
+  # scripts/setup-github.sh. It is NOT a task repo; don't list it here.
+  # - name: dev-aiagent
+  #   provider: github
+  #   remote: "ersunnyroy/dev-aiagent"
+
+git:
+  # Identity for ALL commits the agent makes in work (Bitbucket) repos.
+  # author_name empty = take the name from your global git config.
+  author_name: ""
+  author_email: "suni.kumar@qualibar.com"
+  commit_trailer: ""               # e.g. "Co-Authored-By: dev-agent"
+  never_push_branches: ["main", "master", "develop", "staging", "production"]
+
+bitbucket:
+  # PRs are opened as suni.kumar@qualibar.com. Auth: Atlassian API token for that account
+  # with repo read/write + pull-request write scopes:
+  #   devagent secrets set bitbucket_email        (suni.kumar@qualibar.com)
+  #   devagent secrets set bitbucket_api_token
+  default_reviewers: []            # Bitbucket account UUIDs, optional
+  close_source_branch: true
+
+github:
+  # only needed if a repo has provider: github. Uses `gh` CLI auth by default.
+  account: "ersunnyroy"
+
+# ── Telegram (your phone) ───────────────────────────────────────────────────
+telegram:
+  # devagent secrets set telegram_bot_token   (from @BotFather)
+  # chat_id is captured automatically the first time you send /start
+  allowed_chat_id: null
+
+# ── Microsoft Teams ─────────────────────────────────────────────────────────
+teams:
+  enabled: true
+  # Graph delegated sign-in (device code). Default client is Microsoft's
+  # "Graph Command Line Tools" public app; replace with your own app id if your
+  # tenant requires a registered app.
+  client_id: "14d82eec-204b-4c2f-b7e8-296a70dab67e"
+  tenant: "organizations"
+  pr_chat_topic: "v4-app"          # group chat where PR requests are posted
+  # people @mentioned in the PR message (display names as in Teams)
+  pr_reviewers: ["Puneet Chelani", "Virendra Pratap Singh", "Mithun M P"]
+  confirm_before_post: true        # one-tap confirm on Telegram before posting
+  # fallback if Graph posting is blocked: a Power Automate "Workflows" webhook URL
+  # devagent secrets set teams_webhook_url
+  triage:
+    enabled: true
+    poll_seconds: 90
+    work_hours: ["08:00", "20:00"]
+    always_notify_from: ["Sandip", "Sangita"]
+
+# ── Meetings ────────────────────────────────────────────────────────────────
+meetings:
+  audio_device: "DevAgent Capture"   # aggregate device (mic + BlackHole), see README
+  recordings_dir: "~/.devagent/recordings"
+  keep_audio: false                  # delete audio once transcribed
+  whisper:
+    binary: "whisper-cli"            # from `brew install whisper-cpp`
+    model: "~/.devagent/models/ggml-large-v3-turbo.bin"
+    language: "auto"                 # auto | en | hi   (Hinglish works with auto)
+  # Apps whose audio activity means "a call is on" (auto-record)
+  call_apps: ["MSTeams", "Microsoft Teams", "zoom.us", "Slack"]
+  auto_record_any_call: true
+  schedule:
+    - { name: "priorities", at: "07:58", window_minutes: 60, kind: priorities }
+    - { name: "standup",    at: "12:58", window_minutes: 45, kind: standup }
+  weekdays: [0, 1, 2, 3, 4]          # Mon–Fri
+
+# ── Task sources ────────────────────────────────────────────────────────────
+havana:
+  enabled: false                     # provision only; wired up later
+  base_url: ""
+  # devagent secrets set havana_token

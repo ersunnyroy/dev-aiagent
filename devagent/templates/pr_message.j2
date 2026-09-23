@@ -1,0 +1,7 @@
+Hi
+{{ mentions }}
+
+Please review and merge the following PR's related to {{ summary }} :
+
+{% for pr in prs %}{{ loop.index }}. {{ pr.url }}
+{% endfor %}

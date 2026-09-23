@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "devagent"
+version = "0.1.0"
+description = "Suni's personal AI dev agent: meeting capture, task planning, coding on branches, PRs, Teams + Telegram bridges"
+requires-python = ">=3.11"
+dependencies = [
+  "claude-agent-sdk>=0.1.70",
+  "python-telegram-bot>=22.0",
+  "httpx>=0.27",
+  "msal>=1.28",
+  "pyyaml>=6.0",
+  "jinja2>=3.1",
+  "keyring>=25.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.23"]
+
+[project.scripts]
+devagent = "devagent.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["devagent*"]
+
+[tool.setuptools.package-data]
+devagent = ["prompts/*.md", "templates/*.j2"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

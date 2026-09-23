@@ -1,0 +1,24 @@
+# {{ title }} — {{ date }}
+
+## Summary
+{% for s in m.summary %}- {{ s }}
+{% endfor %}
+## Decisions
+{% for d in m.decisions %}- {{ d }}
+{% else %}- None recorded
+{% endfor %}
+## Action items
+| Owner | Item | Priority | Due |
+|---|---|---|---|
+{% for a in m.action_items %}| {{ a.owner }} | {{ a.item }} | P{{ a.priority }} | {{ a.due or "-" }} |
+{% endfor %}
+## My tasks
+{% for t in m.suni_tasks %}{{ loop.index }}. **{{ t.title }}** (P{{ t.priority }}) — {{ t.description }}
+{% endfor %}
+## Open questions
+{% for q in m.open_questions %}- {{ q }}
+{% else %}- None
+{% endfor %}
+## Day plan
+{% for b in m.day_plan %}- {{ b.time }} — {{ b.task }}: {{ b.goal }}
+{% endfor %}

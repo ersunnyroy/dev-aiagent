@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.suni.devagent</string>
+  <key>ProgramArguments</key>
+  <array>
+    <!-- caffeinate keeps the Mac from idle-sleeping while the agent runs -->
+    <string>/usr/bin/caffeinate</string>
+    <string>-is</string>
+    <string>__DEVAGENT__</string>
+    <string>run</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>__PATH__</string>
+    <key>HOME</key><string>__HOME__</string>
+    <key>DEVAGENT_HOME</key><string>__DA_HOME__</string>
+  </dict>
+  <key>WorkingDirectory</key><string>__DA_HOME__</string>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>30</integer>
+  <key>StandardOutPath</key><string>__DA_HOME__/launchd.out.log</string>
+  <key>StandardErrorPath</key><string>__DA_HOME__/launchd.err.log</string>
+</dict>
+</plist>

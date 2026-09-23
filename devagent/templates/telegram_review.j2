@@ -1,0 +1,12 @@
+🖼 <b>Task #{{ t.id }} ready for your review</b>
+<b>{{ t.title }}</b>
+Branch: <code>{{ t.branch }}</code>
+Repos: {{ t.repos | join(", ") }}
+
+<b>Changes</b>
+<pre>{{ stat }}</pre>
+<b>Tests</b>: {{ tests }}
+<b>Reviews</b>: {{ reviews }}
+<b>Cost so far</b>: ${{ "%.2f"|format(cost) }}
+
+{{ report }}

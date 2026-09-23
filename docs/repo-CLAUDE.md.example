@@ -1,0 +1,24 @@
+# CLAUDE.md — conventions for the AI agent (copy into each work repo root and adjust)
+
+## Stack
+- Laravel <version>, PHP <version>, MySQL 8. Frontend: React <version> (separate repo: vmanagement).
+- Multi-tenant: every tenant-owned table has `tenant_id`; ALWAYS scope queries by tenant
+  (global scope `TenantScope` / `->forTenant()` — adjust to the real helper name).
+- Tables hold millions of rows: add indexes for new WHERE/ORDER BY columns, use `chunkById()`
+  / queued jobs for bulk work, never `->get()` on unbounded queries, paginate lists.
+
+## Structure
+- Controllers thin → FormRequest validation → Service classes (`app/Services`) → Repositories/Models.
+- API responses via API Resources (`app/Http/Resources`).
+- Shared code lives in `vcommons` (composer package) — changes there need a version bump?  <explain>
+- Migrations live in `vmigration` — never put migrations in viam.  <adjust>
+
+## Testing
+- `php artisan test` uses `.env.testing` → database `v4_testing` on local XAMPP MySQL.
+- Feature tests in `tests/Feature/<Area>/`; use factories; `RefreshDatabase`.
+- Frontend: `npm test`; E2E with Playwright in `e2e/` (base URL http://localhost:3000).
+- Login for local UI tests: user `qa@example.com` / tenant `demo`  <adjust or remove>
+
+## Don'ts
+- Don't edit `.env`, don't change CI files, don't add new composer/npm dependencies without saying why.
+- Don't reformat unrelated code.
