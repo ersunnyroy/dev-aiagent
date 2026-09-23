@@ -3,18 +3,18 @@
 # (Bitbucket) git identity. Uses a dedicated SSH key + host alias.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-KEY="$HOME/.ssh/id_ed25519_ersunnyroy"
-if [[ ! -f "$KEY" ]]; then
-  ssh-keygen -t ed25519 -C "er.sunnyroy@gmail.com" -f "$KEY" -N ""
-  echo; echo "Add this public key at https://github.com/settings/ssh/new :"; cat "$KEY.pub"; echo
+KEY="${HOME}/.ssh/id_ed25519_ersunnyroy"
+if [[ ! -f "${KEY}" ]]; then
+  ssh-keygen -t ed25519 -C "er.sunnyroy@gmail.com" -f "${KEY}" -N ""
+  echo; echo "Add this public key at https://github.com/settings/ssh/new :"; cat "${KEY}.pub"; echo
 fi
-if ! grep -q "Host github-ersunnyroy" "$HOME/.ssh/config" 2>/dev/null; then
-  cat >> "$HOME/.ssh/config" <<CFG
+if ! grep -q "Host github-ersunnyroy" "${HOME}/.ssh/config" 2>/dev/null; then
+  cat >> "${HOME}/.ssh/config" <<CFG
 
 Host github-ersunnyroy
   HostName github.com
   User git
-  IdentityFile $KEY
+  IdentityFile ${KEY}
   IdentitiesOnly yes
 CFG
 fi
